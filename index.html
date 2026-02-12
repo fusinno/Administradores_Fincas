@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FincaHub CRM — Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+                    colors: {
+                        brand: { 50:'#f0f4ff',100:'#dbe4ff',200:'#bac8ff',300:'#91a7ff',400:'#748ffc',500:'#5c7cfa',600:'#4c6ef5',700:'#4263eb',800:'#3b5bdb',900:'#364fc7' },
+                        surface: { 50:'#f8f9fc',100:'#f1f3f9',200:'#e8ecf4',300:'#d5dbe8',400:'#a3adc4' },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',system-ui,sans-serif;background:#f1f3f9;color:#1a1d2e}
+        ::-webkit-scrollbar{width:6px;height:6px}
+        ::-webkit-scrollbar-track{background:transparent}
+        ::-webkit-scrollbar-thumb{background:#c1c8d9;border-radius:3px}
+        ::-webkit-scrollbar-thumb:hover{background:#a3adc4}
+        .glass{background:rgba(255,255,255,0.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+        .card-hover{transition:all 0.2s ease}
+        .card-hover:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(59,91,219,0.12)}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        .animate-in{animation:fadeIn 0.3s ease forwards}
+        @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+        .slide-in{animation:slideIn 0.3s ease forwards}
+        @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.5}}
+        .pulse-dot{animation:pulse-dot 2s ease-in-out infinite}
+        .tag{display:inline-flex;align-items:center;padding:2px 10px;border-radius:9999px;font-size:0.75rem;font-weight:600;letter-spacing:0.02em}
+        input:focus,select:focus,textarea:focus{outline:none;box-shadow:0 0 0 3px rgba(76,110,245,0.15);border-color:#4c6ef5}
+        .stat-card{position:relative;overflow:hidden}
+        .stat-card::after{content:'';position:absolute;top:-50%;right:-50%;width:100%;height:100%;background:radial-gradient(circle,rgba(255,255,255,0.15) 0%,transparent 70%);pointer-events:none}
+        .kanban-col{min-height:400px}
+        @keyframes floatUp{from{opacity:0;transform:translateY(40px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+        .float-up{animation:floatUp 0.6s cubic-bezier(0.16,1,0.3,1) forwards}
+        @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+        .shimmer-bg{background:linear-gradient(90deg,#4c6ef5 0%,#7c3aed 25%,#4c6ef5 50%,#7c3aed 75%,#4c6ef5 100%);background-size:200% 100%;animation:shimmer 3s linear infinite}
+        .login-card{box-shadow:0 25px 80px rgba(59,91,219,0.25),0 0 0 1px rgba(255,255,255,0.1) inset}
+        .arg-card{transition:all 0.3s ease}
+        .arg-card:hover{transform:translateY(-3px);box-shadow:0 15px 50px rgba(0,0,0,0.08)}
+    </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const {useState,useEffect,useCallback,useRef,useMemo}=React;
+
+// ===== EMBEDDED DATA (20 records) =====
+const EMBEDDED_DATA = [{"id":3574,"name":"Ricon Administración De Fincas","address":"C. Brigadas Internacionales, 5, 28805 Alcalá de Henares, Madrid, Spain","apartment":null,"house_number":"5","street":"Calle Brigadas Internacionales","district":null,"city_address":"Alcalá de Henares","state":"Comunidad de Madrid","region":"Madrid","country":"Spain","zip_code":"28805","full_address":"C. Brigadas Internacionales, 5, 28805 Alcalá de Henares, Madrid, Spain","currency_oferta":null,"propietario":null,"num_comunidades":null,"num_empleados":null,"nombre_sl":null,"nif":null,"phone":null,"city":"Madrid","web":"ricon.es","municipio":"Alcalá de Henares","reviews_google":1,"rating_google":5,"email":null,"keyword_web":"administración de fincas","begin_activity":null,"probabilidad":1,"comunidad_autonoma":"Comunidad de Madrid","phones_web":"+34918812711","emails_web":null,"funnel_status":"SI","persona_contacto":"ANGEL","responsable":"MARIO","proximo_contacto":"SI","comentarios":"SE MANDA HOY 9 DE DICIEMBRE CORREO CON PRESUPUESTO Y PROXIMA DECISION O REUNION"},{"id":3617,"name":"Freire Administración De Fincas","address":"C. Navarro y Ledesma, 8, 28807 Alcalá de Henares, Madrid, Spain","apartment":null,"house_number":"8","street":"Calle Navarro y Ledesma","district":null,"city_address":"Alcalá de Henares","state":"Comunidad de Madrid","region":"Madrid","country":"Spain","zip_code":"28807","full_address":"C. Navarro y Ledesma, 8, 28807 Alcalá de Henares, Madrid, Spain","currency_oferta":null,"propietario":null,"num_comunidades":null,"num_empleados":null,"nombre_sl":null,"nif":null,"phone":null,"city":"Madrid","web":null,"municipio":"Alcalá de Henares","reviews_google":1,"rating_google":5,"email":null,"keyword_web":"administración de fincas","begin_activity":null,"probabilidad":1,"comunidad_autonoma":"Comunidad de Madrid","phones_web":null,"emails_web":null,"funnel_status":"SI","persona_contacto":"ANA/ANTONIO","responsable":"MARIO","proximo_contacto":"SI","comentarios":"REUNION PROGRAMADA PARA PRIMEROS DE AÑO .INTERESADOS EN EL PROYECTO"},{"id":3607,"name":"Nars Consulting","address":"C. Nebrija, 1, 28801 Alcalá de Henares, Madrid, Spain","apartment":null,"house_number":"1","street":"Calle Nebrija","district":null,"city_address":"Alcalá de Henares","state":"Comunidad de Madrid","region":"Madrid","country":"Spain","zip_code":"28801","full_address":"C. Nebrija, 1, 28801 Alcalá de Henares, Madrid, Spain","currency_oferta":null,"propietario":null,"num_comunidades":null,"num_empleados":null,"nombre_sl":"NARS CONSULTING SL","nif":"B85997765","phone":"918 88 91 53","city":"Madrid","web":"narsconsulting.com","municipio":"Alcalá de Henares","reviews_google":2,"rating_google":1,"email":null,"keyword_web":"fincas","begin_activity":"2010-10-07","probabilidad":0.8,"comunidad_autonoma":"Comunidad de Madrid","phones_web":"912771021, 696000000","emails_web":"nars@narsconsulting.com","funnel_status":"RELLAMAR","persona_contacto":null,"responsable":"MARIO","proximo_contacto":null,"comentarios":null},{"id":3609,"name":"AMP Asesoría 2018 SL","address":"Av. de Benito Pérez Galdós, 7, 28806 Alcalá de Henares, Madrid, Spain","apartment":null,"house_number":"7","street":"Avenida de Benito Pérez Galdós","district":null,"city_address":"Alcalá de Henares","state":"Comunidad de Madrid","region":"Madrid","country":"Spain","zip_code":"28806","full_address":"Av. de Benito Pérez Galdós, 7, 28806 Alcalá de Henares, Madrid, Spain","currency_oferta":null,"propietario":"ALCARAZ MIGUEL ELENA","num_comunidades":null,"num_empleados":null,"nombre_sl":"AMP ASESORIA 2018 SL","nif":"B87965398","phone":"918781259","city":"Alcala De Henares","web":"ampasesoria.es","municipio":"Alcalá de Henares","reviews_google":5,"rating_google":4.2,"email":null,"keyword_web":"administración de fincas","begin_activity":"2018-01-01","probabilidad":1,"comunidad_autonoma":"Comunidad de Madrid","phones_web":"918781259, 681055832","emails_web":"ampasesoria@ampasesoria.es","funnel_status":"RELLAMAR","persona_contacto":null,"responsable":"MARIO","proximo_contacto":null,"comentarios":null},{"id":1832,"name":"Maquilón","address":"C. de Lope de Vega, 1, 28805 Alcalá de Henares, Madrid, Spain","apartment":null,"house_number":"1","street":"Calle de Lope de Vega","district":null,"city_address":"Alcalá de Henares","state":"Comunidad de Madrid","region":"Madrid","country":"Spain","zip_code":"28805","full_address":"C. de Lope de Vega, 1, 28805 Alcalá de Henares, Madrid, Spain","currency_oferta":null,"propietario":null,"num_comunidades":null,"num_empleados":null,"nombre_sl":null,"nif":null,"phone":null,"city":"Madrid","web":"maquilon.es","municipio":"Alcalá de Henares","reviews_google":4,"rating_google":4.5,"email":null,"keyword_web":"administración de fincas","begin_activity":null,"probabilidad":1,"comunidad_autonoma":"Comunidad de Madrid","phones_web":"968202097, 656511777","emails_web":"fincas@maquilon.es, seguros@maquilon.es","funnel_status":"RELLAMAR","persona_contacto":"JENNIFER/YOLANDA","responsable":"EMILIO","proximo_contacto":"SI","comentarios":"CORREDURIA DE SEGUROS PROPIA. Envio presentacion, jefe se llama Marco (Jennifer -contabilidad)"},{"id":3559,"name":"Administración De Fincas Ana Ruiz","address":"Calle Alejo Carpentier, 30, 28806 Alcalá de Henares, Madrid, Spain","apartment":null,"house_number":"30","street":"Calle Alejo Carpentier","district":null,"city_address":"Alcalá de Henares","state":"Comunidad de Madrid","region":"Madrid","country":"Spain","zip_code":"28806","full_address":"Calle Alejo Carpentier, 30, 28806 Alcalá de Henares, Madrid, Spain","currency_oferta":null,"propietario":null,"num_comunidades":null,"num_empleados":null,"nombre_sl":null,"nif":null,"phone":null,"city":"Madrid","web":"anaruiz.net","municipio":"Alcalá de Henares","reviews_google":11,"rating_google":3.3,"email":null,"keyword_web":"administración de fincas","begin_activity":null,"probabilidad":1,"comunidad_autonoma":"Comunidad de Madrid","phones_web":"678353089","emails_web":"INFO@COMUNIDADESAZANA.ES","funnel_status":"RELLAMAR","persona_contacto":"BEATRIZ/ANA","responsable":"EMILIO","proximo_contacto":"SI","comentarios":"MANDADO POR MAIL, HABLADO CON ANA. LO MIRAN PERO CREE QUE NO NECESITAN."},{"id":3596,"name":"Egadin Asesores SL","address":"C. Nardo, 28803 Alcalá de Henares, Madrid, Spain","apartment":null,"house_number":null,"street":"Calle Nardo","district":null,"city_address":"Alcalá de Henares","state":"Comunidad de Madrid","region":"Madrid","country":"Spain","zip_code":"28803","full_address":"C. Nardo, 28803 Alcalá de Henares, Madrid, Spain","currency_oferta":null,"propietario":"TOLEDO ESTEBAN ERICA","num_comunidades":null,"num_empleados":null,"nombre_sl":"EGADIN ASESORES SL","nif":"B85631851","phone":"694 41 86 67","city":"Anchuelo","web":"egadinasesores.com","municipio":"Alcalá de Henares","reviews_google":null,"rating_google":null,"email":null,"keyword_web":"administracion de fincas","begin_activity":"2009-03-02","probabilidad":1,"comunidad_autonoma":"Comunidad de Madrid","phones_web":null,"emails_web":"info@egadinasesores.com","funnel_status":"RELLAMAR","persona_contacto":null,"responsable":"MARIO","proximo_contacto":null,"comentarios":null},{"id":3603,"name":"CM Asesoría Legal y Administración de Fincas SL","address":"Av. Caballería Española, 12, 1-D, 28805 Alcalá de Henares, Madrid, Spain","apartment":"1-D","house_number":"12","street":"Avenida Caballería Española","district":null,"city_address":"Alcalá de Henares","state":"Comunidad de Madrid","region":"Madrid","country":"Spain","zip_code":"28805","full_address":"Av. Caballería Española, 12, 1-D, 28805 Alcalá de Henares, Madrid, Spain","currency_oferta":null,"propietario":"CASTILLO MINYETTE RUBEN DARIO","num_comunidades":null,"num_empleados":null,"nombre_sl":"CM ASESORIA LEGAL Y ADMINISTRACION DE FINCAS SL","nif":"B88298997","phone":"685 85 25 33","city":"Alcala De Henares","web":"cm-asesoria.es","municipio":"Alcalá de Henares","reviews_google":7,"rating_google":5,"email":null,"keyword_web":"administración de fincas","begin_activity":"2019-01-28","probabilidad":1,"comunidad_autonoma":"Comunidad de Madrid","phones_web":null,"emails_web":null,"funnel_status":"RELLAMAR","persona_contacto":null,"responsable":"MARIO","proximo_contacto":null,"comentarios":null},{"id":3598,"name":"Francisco Ruiz Cubero","address":"Pl. de España, 7, 1 B, 28805 Alcalá de Henares, Madrid, Spain","apartment":"1 B","house_number":"7","street":"Plaza de España","district":null,"city_address":"Alcalá de Henares","state":"Comunidad de Madrid","region":"Madrid","country":"Spain","zip_code":"28805","full_address":"Pl. de España, 7, 1 B, 28805 Alcalá de Henares, Madrid, Spain","currency_oferta":null,"propietario":null,"num_comunidades":null,"num_empleados":null,"nombre_sl":null,"nif":null,"phone":null,"city":"Madrid","web":"cuberoabogados.com","municipio":"Alcalá de Henares","reviews_google":3,"rating_google":4.7,"email":null,"keyword_web":"administración de fincas","begin_activity":null,"probabilidad":1,"comunidad_autonoma":"Comunidad de Madrid","phones_web":"918824113","emails_web":"cubero@cuberoabogados.com","funnel_status":"RELLAMAR","persona_contacto":null,"responsable":"EMILIO","proximo_contacto":null,"comentarios":null},{"id":3614,"name":"La 13 De Alcalá De Henares, S.L.","address":"C. Luis Vives, 9, 28803 Alcalá de Henares, Madrid, Spain","apartment":null,"house_number":"9","street":"Calle Luis Vives","district":null,"city_address":"Alcalá de Henares","state":"Comunidad de Madrid","region":"Madrid","country":"Spain","zip_code":"28803","full_address":"C. Luis Vives, 9, 28803 Alcalá de Henares, Madrid, Spain","currency_oferta":null,"propietario":null,"num_comunidades":null,"num_empleados":null,"nombre_sl":null,"nif":null,"phone":null,"city":"Madrid","web":"la13dealcala.es","municipio":"Alcalá de Henares","reviews_google":6,"rating_google":5,"email":null,"keyword_web":"horizontal","begin_activity":null,"probabilidad":0.6,"comunidad_autonoma":"Comunidad de Madrid","phones_web":"918826295, 687974302","emails_web":"info@la13dealcala.es","funnel_status":"RELLAMAR","persona_contacto":null,"responsable":"MARIO","proximo_contacto":null,"comentarios":null},{"id":3560,"name":"Gabinete Técnico de Administración SL","address":"C. Encomienda, 35, 28805 Alcalá de Henares, Madrid, Spain","apartment":null,"house_number":"35","street":"Calle Encomienda","district":null,"city_address":"Alcalá de Henares","state":"Comunidad de Madrid","region":"Madrid","country":"Spain","zip_code":"28805","full_address":"C. Encomienda, 35, 28805 Alcalá de Henares, Madrid, Spain","currency_oferta":null,"propietario":"DE LA FUENTE GALEY CARLOS-HUGO","num_comunidades":null,"num_empleados":null,"nombre_sl":"GABINETE TECNICO DE ADMINISTRACION SL","nif":"B78162252","phone":"918 81 88 53","city":"Alcala De Henares","web":"gtasl.com","municipio":"Alcalá de Henares","reviews_google":10,"rating_google":2.5,"email":null,"keyword_web":"administracion de fincas","begin_activity":null,"probabilidad":1,"comunidad_autonoma":"Comunidad de Madrid","phones_web":null,"emails_web":null,"funnel_status":"NO","persona_contacto":"BARBARA","responsable":"MARIO","proximo_contacto":"SI","comentarios":"NOS CONTESTAN VIA EMAIL QUE NO ESTAN INTERESADOS. MAJETES"},{"id":3563,"name":"Gesahbox Administración De Fincas","address":"C. Navarro y Ledesma, 8, 28807 Alcalá de Henares, Madrid, Spain","apartment":null,"house_number":"8","street":"Calle Navarro y Ledesma","district":null,"city_address":"Alcalá de Henares","state":"Comunidad de Madrid","region":"Madrid","country":"Spain","zip_code":"28807","full_address":"C. Navarro y Ledesma, 8, 28807 Alcalá de Henares, Madrid, Spain","currency_oferta":null,"propietario":null,"num_comunidades":null,"num_empleados":null,"nombre_sl":null,"nif":null,"phone":null,"city":"Madrid","web":"gesahbox.es","municipio":"Alcalá de Henares","reviews_google":27,"rating_google":4.4,"email":null,"keyword_web":"administración de fincas","begin_activity":null,"probabilidad":1,"comunidad_autonoma":"Comunidad de Madrid","phones_web":"984460428","emails_web":"alcalacentro@gesahbox.es, comunicacion@gesahbox.es","funnel_status":"NO","persona_contacto":"NO ME FACILITAN NOMBRE","responsable":"MARIO","proximo_contacto":"SI","comentarios":"CONTACTO CON ELLOS Y QUEDAN EN RESPONDERME VIA EMAIL SI ESTAN INTERESADOS O NO"},{"id":1984,"name":"Dparte Administración De Fincas","address":"C. Miguel Delibes, 9, 28806 Alcalá de Henares, Madrid, Spain","apartment":null,"house_number":"9","street":"Calle Miguel Delibes","district":null,"city_address":"Alcalá de Henares","state":"Comunidad de Madrid","region":"Madrid","country":"Spain","zip_code":"28806","full_address":"C. Miguel Delibes, 9, 28806 Alcalá de Henares, Madrid, Spain","currency_oferta":null,"propietario":null,"num_comunidades":null,"num_empleados":null,"nombre_sl":null,"nif":null,"phone":null,"city":"Madrid","web":"dpartefincas.com","municipio":"Alcalá de Henares","reviews_google":null,"rating_google":null,"email":null,"keyword_web":"administración de fincas","begin_activity":null,"probabilidad":1,"comunidad_autonoma":"Comunidad de Madrid","phones_web":"638270297","emails_web":"n@dpartefincas.com, info@dpartefincas.com","funnel_status":"NO","persona_contacto":"DAVID","responsable":"EMILIO","proximo_contacto":"NO","comentarios":"30 FINCAS, SE QUEDA CONTACTO, GUSTA PROYECTO Valladolid"},{"id":3555,"name":"Administración Fincas del Henares SL","address":"C. Perales de Tajuña, 2, 28806 Alcalá de Henares, Madrid, Spain","apartment":null,"house_number":"2","street":"Calle Perales de Tajuña","district":null,"city_address":"Alcalá de Henares","state":"Comunidad de Madrid","region":"Madrid","country":"Spain","zip_code":"28806","full_address":"C. Perales de Tajuña, 2, 28806 Alcalá de Henares, Madrid, Spain","currency_oferta":null,"propietario":null,"num_comunidades":null,"num_empleados":null,"nombre_sl":"ADMINISTRACION FINCAS DEL HENARES SL","nif":"B83782466","phone":"918 82 84 50","city":"Alcala De Henares","web":null,"municipio":"Alcalá de Henares","reviews_google":14,"rating_google":4.1,"email":null,"keyword_web":"fincas","begin_activity":null,"probabilidad":0.8,"comunidad_autonoma":"Comunidad de Madrid","phones_web":null,"emails_web":null,"funnel_status":"NO","persona_contacto":null,"responsable":"ALEJANDRO","proximo_contacto":"NO","comentarios":"somos nosotros"},{"id":3580,"name":"Administradores De Fincas Alcalá — A3Finc","address":"C. de Celestino Mutis, 81, 28806 Alcalá de Henares, Madrid, Spain","apartment":null,"house_number":"81","street":"Calle de Celestino Mutis","district":null,"city_address":"Alcalá de Henares","state":"Comunidad de Madrid","region":"Madrid","country":"Spain","zip_code":"28806","full_address":"C. de Celestino Mutis, 81, 28806 Alcalá de Henares, Madrid, Spain","currency_oferta":null,"propietario":null,"num_comunidades":null,"num_empleados":null,"nombre_sl":null,"nif":null,"phone":null,"city":"Madrid","web":"administradoresdefincas3.es","municipio":"Alcalá de Henares","reviews_google":null,"rating_google":null,"email":null,"keyword_web":"administración de fincas","begin_activity":null,"probabilidad":1,"comunidad_autonoma":"Comunidad de Madrid","phones_web":"+34625757785","emails_web":"info@a3finc.es","funnel_status":"NO","persona_contacto":"JERONIMO","responsable":"MARIO","proximo_contacto":"SI","comentarios":"CONTACTAMOS 10 DICIEMBRE SIN RESPUESTA. PROXIMA LLAMADA SEMANA QUE VIENE"},{"id":6963,"name":"Asesoría Reyes Católicos SL","address":"Av. Reyes Católicos, 14, 28802 Alcalá de Henares, Madrid, Spain","apartment":null,"house_number":"14","street":"Avenida Reyes Católicos","district":null,"city_address":"Alcalá de Henares","state":"Comunidad de Madrid","region":"Madrid","country":"Spain","zip_code":"28802","full_address":"Av. Reyes Católicos, 14, 28802 Alcalá de Henares, Madrid, Spain","currency_oferta":null,"propietario":null,"num_comunidades":null,"num_empleados":null,"nombre_sl":"ASESORIA REYES CATOLICOS SL","nif":"B83162669","phone":"918 83 20 02","city":"Alcala De Henares","web":"asesoriareyescatolicos.com","municipio":"Alcalá de Henares","reviews_google":32,"rating_google":3.8,"email":null,"keyword_web":"fincas","begin_activity":null,"probabilidad":0.8,"comunidad_autonoma":"Comunidad de Madrid","phones_web":"918832002, 696000000, 692614524","emails_web":"arc3@asesoriareyescatolicos.com, arc@asesoriareyescatolicos.com","funnel_status":null,"persona_contacto":null,"responsable":"MARIO","proximo_contacto":null,"comentarios":null},{"id":3592,"name":"Juriscom","address":"C. los Hueros, 3, 28806 Alcalá de Henares, Madrid, Spain","apartment":null,"house_number":"3","street":"Calle los Hueros","district":null,"city_address":"Alcalá de Henares","state":"Comunidad de Madrid","region":"Madrid","country":"Spain","zip_code":"28806","full_address":"C. los Hueros, 3, 28806 Alcalá de Henares, Madrid, Spain","currency_oferta":null,"propietario":null,"num_comunidades":null,"num_empleados":null,"nombre_sl":null,"nif":null,"phone":null,"city":"Madrid","web":"juriscom.es","municipio":"Alcalá de Henares","reviews_google":1,"rating_google":5,"email":null,"keyword_web":"administración de fincas","begin_activity":null,"probabilidad":1,"comunidad_autonoma":"Comunidad de Madrid","phones_web":"918897208","emails_web":"juriscom@juriscom.es","funnel_status":null,"persona_contacto":null,"responsable":"MARIO","proximo_contacto":null,"comentarios":"NO LES INTERESA EL PROYECTO"},{"id":3620,"name":"Teleloterias Don Manolito","address":"P.º de la Estación, 2, 28807 Alcalá de Henares, Madrid, Spain","apartment":null,"house_number":"2","street":"Paseo de la Estación","district":null,"city_address":"Alcalá de Henares","state":"Comunidad de Madrid","region":"Madrid","country":"Spain","zip_code":"28807","full_address":"P.º de la Estación, 2, 28807 Alcalá de Henares, Madrid, Spain","currency_oferta":null,"propietario":null,"num_comunidades":null,"num_empleados":null,"nombre_sl":null,"nif":null,"phone":null,"city":"Madrid","web":"teleloterias.es","municipio":"Alcalá de Henares","reviews_google":12,"rating_google":4,"email":null,"keyword_web":"horizontal","begin_activity":null,"probabilidad":0.6,"comunidad_autonoma":"Comunidad de Madrid","phones_web":"918196792, 687974302","emails_web":"info@loteriadonmanolito.es","funnel_status":null,"persona_contacto":null,"responsable":"MARIO","proximo_contacto":null,"comentarios":"LOTERIAS"},{"id":3627,"name":"Concejalía De Medio Ambiente","address":"C. Bosnia Herzegovina, 6, 28802 Alcalá de Henares, Madrid, Spain","apartment":null,"house_number":"6","street":"Calle Bosnia Herzegovina","district":null,"city_address":"Alcalá de Henares","state":"Comunidad de Madrid","region":"Madrid","country":"Spain","zip_code":"28802","full_address":"C. Bosnia Herzegovina, 6, 28802 Alcalá de Henares, Madrid, Spain","currency_oferta":null,"propietario":null,"num_comunidades":null,"num_empleados":null,"nombre_sl":null,"nif":null,"phone":null,"city":"Madrid","web":"ayto-alcaladehenares.es","municipio":"Alcalá de Henares","reviews_google":1,"rating_google":5,"email":null,"keyword_web":"vecinos","begin_activity":null,"probabilidad":0.7,"comunidad_autonoma":"Comunidad de Madrid","phones_web":"666666666","emails_web":"polmayer@yahoo.es, 010@ayto-alcaladehenares.es","funnel_status":null,"persona_contacto":null,"responsable":"MARIO","proximo_contacto":"NO","comentarios":"NO INTERESADOS EN EL PROYECTO"},{"id":3628,"name":"Concejalía De Hacienda","address":"Pl. de Cervantes, 4, 28801 Alcalá de Henares, Madrid, Spain","apartment":null,"house_number":"4","street":"Plaza de Cervantes","district":null,"city_address":"Alcalá de Henares","state":"Comunidad de Madrid","region":"Madrid","country":"Spain","zip_code":"28801","full_address":"Pl. de Cervantes, 4, 28801 Alcalá de Henares, Madrid, Spain","currency_oferta":null,"propietario":null,"num_comunidades":null,"num_empleados":null,"nombre_sl":null,"nif":null,"phone":null,"city":"Madrid","web":"ayto-alcaladehenares.es","municipio":"Alcalá de Henares","reviews_google":29,"rating_google":2.8,"email":null,"keyword_web":"vecinos","begin_activity":null,"probabilidad":0.7,"comunidad_autonoma":"Comunidad de Madrid","phones_web":"666666666","emails_web":"polmayer@yahoo.es, 010@ayto-alcaladehenares.es","funnel_status":null,"persona_contacto":null,"responsable":"MARIO","proximo_contacto":"NO","comentarios":"NO INTERESADOS EN EL PROYECTO"}];
+
+// ===== ICONS =====
+const I={
+    dashboard:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+    list:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
+    kanban:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="5" height="15" rx="1"/></svg>,
+    search:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+    plus:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+    x:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+    edit:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+    eye:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
+    building:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>,
+    phone:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
+    mail:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
+    globe:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
+    mapPin:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+    star:p=><svg {...p} viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+    users:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+    target:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
+    save:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
+    arrowLeft:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>,
+    lock:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
+    user:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+    book:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
+    logout:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+    check:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+    alert:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
+    zap:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+    shield:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+    trendUp:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+    msgCircle:p=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>,
+};
+
+// ===== UTILITIES =====
+function getFunnelColor(s){
+    if(!s)return{bg:'bg-surface-200',text:'text-surface-400',label:'Pendiente',dot:'bg-surface-400'};
+    const u=s.toUpperCase();
+    if(u.includes('RELLAMAR'))return{bg:'bg-amber-50',text:'text-amber-700',label:'Rellamar',dot:'bg-amber-400'};
+    if(u==='SI')return{bg:'bg-emerald-50',text:'text-emerald-700',label:'En Funnel',dot:'bg-emerald-500'};
+    if(u==='NO')return{bg:'bg-rose-50',text:'text-rose-600',label:'No interesado',dot:'bg-rose-400'};
+    return{bg:'bg-surface-200',text:'text-surface-400',label:s,dot:'bg-surface-400'};
+}
+function getProbColor(p){
+    if(p===null||p===undefined)return'text-surface-400';
+    if(p>=0.8)return'text-emerald-600';
+    if(p>=0.6)return'text-amber-600';
+    return'text-rose-500';
+}
+function computeStats(records){
+    const t=records.length;
+    const funnel={PENDIENTE:0,NO:0,RELLAMAR:0,SI:0};
+    const resp={};
+    records.forEach(r=>{
+        const s=r.funnel_status;
+        if(!s)funnel.PENDIENTE++;
+        else if(s.toUpperCase().includes('RELLAMAR'))funnel.RELLAMAR++;
+        else if(s.toUpperCase()==='NO')funnel.NO++;
+        else if(s.toUpperCase()==='SI')funnel.SI++;
+        else funnel.PENDIENTE++;
+        const re=r.responsable||'Sin asignar';
+        resp[re]=(resp[re]||0)+1;
+    });
+    const withR=records.filter(r=>r.rating_google);
+    const avgR=withR.length?Math.round(withR.reduce((a,r)=>a+r.rating_google,0)/withR.length*10)/10:0;
+    const totalRev=records.reduce((a,r)=>a+(r.reviews_google||0),0);
+    return{total:t,funnel,responsables:resp,google:{avg_rating:avgR,total_reviews:totalRev,with_reviews:withR.length},
+        contacto:{with_phone:records.filter(r=>r.phone||r.phones_web).length,with_email:records.filter(r=>r.email||r.emails_web).length,with_web:records.filter(r=>r.web).length}};
+}
+
+// ===== LOGIN SCREEN =====
+function LoginScreen({onLogin}){
+    const[user,setUser]=useState('');
+    const[pass,setPass]=useState('');
+    const[error,setError]=useState('');
+    const[loading,setLoading]=useState(false);
+
+    const handleSubmit=e=>{
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+        setTimeout(()=>{
+            if(user==='Emilio'&&pass==='12345678'){
+                onLogin(user);
+            } else {
+                setError('Usuario o contraseña incorrectos');
+                setLoading(false);
+            }
+        },800);
+    };
+
+    return(
+        <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{background:'linear-gradient(135deg,#0f172a 0%,#1e293b 40%,#1a1d2e 100%)'}}>
+            {/* Decorative elements */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                <div className="absolute -top-24 -left-24 w-96 h-96 bg-brand-600/10 rounded-full blur-3xl"/>
+                <div className="absolute top-1/3 -right-32 w-[500px] h-[500px] bg-violet-600/8 rounded-full blur-3xl"/>
+                <div className="absolute -bottom-32 left-1/3 w-80 h-80 bg-brand-500/6 rounded-full blur-3xl"/>
+                {/* Grid pattern */}
+                <div className="absolute inset-0 opacity-[0.03]" style={{backgroundImage:'radial-gradient(circle at 1px 1px, white 1px, transparent 0)',backgroundSize:'40px 40px'}}/>
+            </div>
+
+            <div className="relative z-10 w-full max-w-md px-6">
+                {/* Logo */}
+                <div className="text-center mb-8 float-up" style={{animationDelay:'0ms'}}>
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl shimmer-bg shadow-2xl shadow-brand-600/40 mb-4">
+                        <I.building className="w-8 h-8 text-white"/>
+                    </div>
+                    <h1 className="text-3xl font-extrabold text-white tracking-tight">FincaHub</h1>
+                    <p className="text-sm text-slate-400 mt-1">CRM Administradores de Fincas</p>
+                </div>
+
+                {/* Card */}
+                <div className="login-card bg-white/[0.06] border border-white/10 rounded-3xl p-8 backdrop-blur-xl float-up" style={{animationDelay:'150ms'}}>
+                    <h2 className="text-lg font-bold text-white mb-1">Iniciar Sesión</h2>
+                    <p className="text-xs text-slate-400 mb-6">Introduce tus credenciales para acceder al panel</p>
+
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                            <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Usuario</label>
+                            <div className="relative">
+                                <I.user className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"/>
+                                <input type="text" value={user} onChange={e=>setUser(e.target.value)} placeholder="Nombre de usuario"
+                                    className="w-full pl-11 pr-4 py-3 bg-white/[0.06] border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:border-brand-500 focus:bg-white/[0.1] transition-all"/>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Contraseña</label>
+                            <div className="relative">
+                                <I.lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"/>
+                                <input type="password" value={pass} onChange={e=>setPass(e.target.value)} placeholder="Tu contraseña"
+                                    className="w-full pl-11 pr-4 py-3 bg-white/[0.06] border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:border-brand-500 focus:bg-white/[0.1] transition-all"/>
+                            </div>
+                        </div>
+
+                        {error && (
+                            <div className="flex items-center gap-2 text-rose-400 text-xs bg-rose-500/10 border border-rose-500/20 px-3 py-2.5 rounded-xl animate-in">
+                                <I.alert className="w-4 h-4 flex-shrink-0"/>
+                                {error}
+                            </div>
+                        )}
+
+                        <button type="submit" disabled={loading}
+                            className="w-full py-3 shimmer-bg text-white text-sm font-bold rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-brand-600/30 flex items-center justify-center gap-2 disabled:opacity-50">
+                            {loading ? (
+                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"/>
+                            ) : (
+                                <>Acceder al Panel <span className="text-white/60">→</span></>
+                            )}
+                        </button>
+                    </form>
+                </div>
+
+                <p className="text-center text-[11px] text-slate-600 mt-6 float-up" style={{animationDelay:'300ms'}}>
+                    Demo CRM — Administradores de Fincas Alcalá de Henares
+                </p>
+            </div>
+        </div>
+    );
+}
+
+// ===== TOAST =====
+function Toast({message,type='success',onClose}){
+    useEffect(()=>{const t=setTimeout(onClose,3000);return()=>clearTimeout(t)},[]);
+    const c=type==='success'?'bg-emerald-500':type==='error'?'bg-rose-500':'bg-brand-600';
+    return <div className={`fixed bottom-6 right-6 ${c} text-white px-5 py-3 rounded-xl shadow-2xl z-50 animate-in flex items-center gap-3`}><span className="text-sm font-medium">{message}</span><button onClick={onClose} className="opacity-70 hover:opacity-100"><I.x className="w-4 h-4"/></button></div>;
+}
+
+// ===== STAT CARD =====
+function StatCard({icon:Icon,label,value,sub,color='from-brand-600 to-brand-800',delay=0}){
+    return <div className="stat-card animate-in card-hover bg-white rounded-2xl p-5 shadow-sm border border-surface-200/50" style={{animationDelay:`${delay}ms`}}>
+        <div className="flex items-start justify-between mb-3">
+            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center shadow-lg`}><Icon className="w-5 h-5 text-white"/></div>
+            {sub&&<span className="text-xs font-medium text-surface-400">{sub}</span>}
+        </div>
+        <div className="text-2xl font-bold tracking-tight">{value}</div>
+        <div className="text-xs font-medium text-surface-400 mt-1">{label}</div>
+    </div>;
+}
+
+// ===== DONUT =====
+function DonutChart({data,colors,size=120}){
+    const total=Object.values(data).reduce((a,b)=>a+b,0);
+    let cum=0;const r=40;const circ=2*Math.PI*r;
+    return <div className="flex items-center gap-4">
+        <svg width={size} height={size} viewBox="0 0 100 100">
+            {Object.entries(data).map(([k,v],i)=>{const pct=total>0?v/total:0;const off=circ*(1-cum/Math.max(total,1));cum+=v;return <circle key={k} cx="50" cy="50" r={r} fill="none" stroke={colors[i]} strokeWidth="12" strokeDasharray={`${circ*pct} ${circ*(1-pct)}`} strokeDashoffset={off} transform="rotate(-90 50 50)"/>})}
+            <text x="50" y="48" textAnchor="middle" fill="#1a1d2e" fontSize="16" fontWeight="800">{total}</text>
+            <text x="50" y="62" textAnchor="middle" fill="#a3adc4" fontSize="8" fontWeight="500">total</text>
+        </svg>
+        <div className="flex flex-col gap-1.5">
+            {Object.entries(data).map(([k,v],i)=><div key={k} className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full" style={{background:colors[i]}}/><span className="text-xs text-surface-400">{k}</span><span className="text-xs font-bold ml-auto">{v}</span></div>)}
+        </div>
+    </div>;
+}
+
+// ===== FUNNEL TAG =====
+function FunnelTag({status}){const{bg,text,label,dot}=getFunnelColor(status);return <span className={`tag ${bg} ${text}`}><span className={`w-1.5 h-1.5 rounded-full ${dot} mr-1.5`}/>{label}</span>;}
+
+// ===== STAR RATING =====
+function StarRating({rating}){if(!rating)return<span className="text-xs text-surface-400">—</span>;return<div className="flex items-center gap-1"><I.star className="w-3.5 h-3.5 text-amber-400"/><span className="text-sm font-semibold">{rating}</span></div>;}
+
+// ===== DASHBOARD =====
+function DashboardView({stats,onNavigate}){
+    const funnelColors=['#a3adc4','#e11d48','#f59e0b','#10b981'];
+    const respColors=['#4c6ef5','#7c3aed','#f43f5e','#10b981'];
+    return <div className="space-y-6 animate-in">
+        <div className="flex items-end justify-between">
+            <div><h1 className="text-3xl font-extrabold tracking-tight">Dashboard</h1><p className="text-surface-400 text-sm mt-1">Vista general — Alcalá de Henares (Demo 20 registros)</p></div>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard icon={I.building} label="Total Administradores" value={stats.total} color="from-brand-600 to-brand-800"/>
+            <StatCard icon={I.target} label="En Funnel (SI)" value={stats.funnel.SI} sub="Conversión" color="from-emerald-500 to-emerald-700" delay={50}/>
+            <StatCard icon={I.phone} label="Pendientes Rellamar" value={stats.funnel.RELLAMAR} sub="Seguimiento" color="from-amber-500 to-amber-700" delay={100}/>
+            <StatCard icon={I.star} label="Valoración Media" value={stats.google.avg_rating} sub={`${stats.google.total_reviews} reviews`} color="from-violet-500 to-violet-700" delay={150}/>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-surface-200/50 card-hover">
+                <h3 className="text-sm font-bold mb-4 flex items-center gap-2"><span className="w-1.5 h-5 rounded-full bg-gradient-to-b from-brand-500 to-brand-700"/>Estado del Pipeline</h3>
+                <DonutChart data={stats.funnel} colors={funnelColors}/>
+            </div>
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-surface-200/50 card-hover">
+                <h3 className="text-sm font-bold mb-4 flex items-center gap-2"><span className="w-1.5 h-5 rounded-full bg-gradient-to-b from-violet-500 to-violet-700"/>Por Responsable</h3>
+                <div className="flex items-end gap-3 h-28 mt-2">
+                    {Object.entries(stats.responsables).map(([k,v],i)=>{const max=Math.max(...Object.values(stats.responsables),1);return<div key={k} className="flex flex-col items-center flex-1 gap-1"><span className="text-xs font-bold">{v}</span><div className="w-full rounded-t-lg transition-all" style={{height:`${Math.max((v/max)*100,8)}%`,background:respColors[i]||'#4c6ef5'}}/><span className="text-[10px] font-medium text-surface-400 text-center">{k}</span></div>})}
+                </div>
+            </div>
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-surface-200/50 card-hover">
+                <h3 className="text-sm font-bold mb-4 flex items-center gap-2"><span className="w-1.5 h-5 rounded-full bg-gradient-to-b from-emerald-500 to-emerald-700"/>Datos de Contacto</h3>
+                <div className="space-y-3">
+                    {[{icon:I.phone,label:'Con teléfono',val:stats.contacto.with_phone,color:'from-blue-500 to-blue-600'},{icon:I.mail,label:'Con email',val:stats.contacto.with_email,color:'from-violet-500 to-violet-600'},{icon:I.globe,label:'Con web',val:stats.contacto.with_web,color:'from-emerald-500 to-emerald-600'}].map(({icon:Ic,label,val,color})=>
+                        <div key={label} className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${color} flex items-center justify-center`}><Ic className="w-4 h-4 text-white"/></div>
+                            <div className="flex-1"><div className="flex justify-between mb-1"><span className="text-xs font-medium text-surface-400">{label}</span><span className="text-xs font-bold">{val}/{stats.total}</span></div><div className="h-1.5 bg-surface-100 rounded-full overflow-hidden"><div className={`h-full bg-gradient-to-r ${color} rounded-full`} style={{width:`${(val/stats.total)*100}%`}}/></div></div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-surface-200/50">
+            <h3 className="text-sm font-bold mb-3">Acciones Rápidas</h3>
+            <div className="flex flex-wrap gap-3">
+                <button onClick={()=>onNavigate('records')} className="px-4 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors flex items-center gap-2 shadow-lg shadow-brand-600/20"><I.list className="w-4 h-4"/>Ver registros</button>
+                <button onClick={()=>onNavigate('kanban')} className="px-4 py-2.5 bg-white text-brand-700 text-sm font-semibold rounded-xl hover:bg-brand-50 transition-colors flex items-center gap-2 border border-brand-200"><I.kanban className="w-4 h-4"/>Pipeline</button>
+                <button onClick={()=>onNavigate('argumentario')} className="px-4 py-2.5 bg-white text-violet-700 text-sm font-semibold rounded-xl hover:bg-violet-50 transition-colors flex items-center gap-2 border border-violet-200"><I.book className="w-4 h-4"/>Argumentario</button>
+            </div>
+        </div>
+    </div>;
+}
+
+// ===== RECORDS TABLE =====
+function RecordsView({records,onView}){
+    const[search,setSearch]=useState('');
+    const[filterF,setFilterF]=useState('');
+    const[filterR,setFilterR]=useState('');
+    const[sortField,setSortField]=useState('name');
+    const[sortDir,setSortDir]=useState('asc');
+
+    const filtered=useMemo(()=>{
+        let r=[...records];
+        if(search){const s=search.toLowerCase();r=r.filter(x=>((x.name||'')+' '+(x.nombre_sl||'')+' '+(x.phone||'')+' '+(x.nif||'')+' '+(x.persona_contacto||'')+' '+(x.full_address||'')).toLowerCase().includes(s));}
+        if(filterF){
+            if(filterF==='PENDIENTE')r=r.filter(x=>!x.funnel_status);
+            else if(filterF==='RELLAMAR')r=r.filter(x=>x.funnel_status&&x.funnel_status.toUpperCase().includes('RELLAMAR'));
+            else r=r.filter(x=>(x.funnel_status||'').toUpperCase()===filterF);
+        }
+        if(filterR)r=r.filter(x=>(x.responsable||'').toUpperCase()===filterR);
+        return r.sort((a,b)=>{let va=a[sortField]??'',vb=b[sortField]??'';if(typeof va==='string')va=va.toLowerCase();if(typeof vb==='string')vb=vb.toLowerCase();return va<vb?(sortDir==='asc'?-1:1):va>vb?(sortDir==='asc'?1:-1):0;});
+    },[records,search,filterF,filterR,sortField,sortDir]);
+
+    const toggleSort=f=>{if(sortField===f)setSortDir(d=>d==='asc'?'desc':'asc');else{setSortField(f);setSortDir('asc');}};
+    const SH=({field,children})=><th className="px-4 py-3 text-left text-xs font-semibold text-surface-400 uppercase tracking-wider cursor-pointer hover:text-brand-600 select-none whitespace-nowrap" onClick={()=>toggleSort(field)}><span className="flex items-center gap-1">{children}{sortField===field&&<span className="text-brand-600">{sortDir==='asc'?'↑':'↓'}</span>}</span></th>;
+
+    return <div className="space-y-4 animate-in">
+        <h1 className="text-3xl font-extrabold tracking-tight">Registros</h1>
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-surface-200/50 flex flex-wrap gap-3 items-center">
+            <div className="relative flex-1 min-w-[200px]"><I.search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-surface-400"/><input type="text" placeholder="Buscar por nombre, teléfono, NIF..." value={search} onChange={e=>setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2.5 text-sm bg-surface-50 border border-surface-200 rounded-xl"/></div>
+            <select value={filterF} onChange={e=>setFilterF(e.target.value)} className="px-4 py-2.5 text-sm bg-surface-50 border border-surface-200 rounded-xl"><option value="">Todos</option><option value="PENDIENTE">Pendiente</option><option value="RELLAMAR">Rellamar</option><option value="SI">En Funnel</option><option value="NO">No interesado</option></select>
+            <select value={filterR} onChange={e=>setFilterR(e.target.value)} className="px-4 py-2.5 text-sm bg-surface-50 border border-surface-200 rounded-xl"><option value="">Responsables</option><option value="MARIO">Mario</option><option value="EMILIO">Emilio</option><option value="ALEJANDRO">Alejandro</option></select>
+            <div className="text-xs text-surface-400 font-medium bg-surface-50 px-3 py-2 rounded-lg">{filtered.length} resultados</div>
+        </div>
+        <div className="bg-white rounded-2xl shadow-sm border border-surface-200/50 overflow-hidden">
+            <div className="overflow-x-auto">
+                <table className="w-full">
+                    <thead className="bg-surface-50/80 border-b border-surface-200"><tr>
+                        <SH field="name">Nombre</SH><SH field="phone">Teléfono</SH><SH field="rating_google">Rating</SH><SH field="probabilidad">Prob.</SH><SH field="funnel_status">Estado</SH><SH field="responsable">Responsable</SH><th className="px-4 py-3 w-12"/>
+                    </tr></thead>
+                    <tbody className="divide-y divide-surface-100">
+                        {filtered.map(r=><tr key={r.id} className="hover:bg-brand-50/30 transition-colors cursor-pointer group" onClick={()=>onView(r.id)}>
+                            <td className="px-4 py-3"><div className="flex items-center gap-3"><div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-100 to-brand-200 flex items-center justify-center text-brand-700 text-xs font-bold flex-shrink-0">{(r.name||'?').substring(0,2).toUpperCase()}</div><div className="min-w-0"><div className="text-sm font-semibold truncate max-w-[220px]">{r.name}</div>{r.nombre_sl&&<div className="text-[11px] text-surface-400 truncate max-w-[220px]">{r.nombre_sl}</div>}</div></div></td>
+                            <td className="px-4 py-3 text-sm">{r.phone||r.phones_web?.split(',')[0]||<span className="text-surface-300">—</span>}</td>
+                            <td className="px-4 py-3"><StarRating rating={r.rating_google}/></td>
+                            <td className="px-4 py-3"><span className={`text-sm font-bold ${getProbColor(r.probabilidad)}`}>{r.probabilidad!=null?`${Math.round(r.probabilidad*100)}%`:'—'}</span></td>
+                            <td className="px-4 py-3"><FunnelTag status={r.funnel_status}/></td>
+                            <td className="px-4 py-3 text-sm font-medium">{r.responsable||'—'}</td>
+                            <td className="px-4 py-3"><button className="p-1.5 hover:bg-brand-50 rounded-lg text-surface-400 hover:text-brand-600 opacity-0 group-hover:opacity-100 transition-all"><I.eye className="w-4 h-4"/></button></td>
+                        </tr>)}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>;
+}
+
+// ===== RECORD DETAIL =====
+function RecordDetailView({record,onBack}){
+    if(!record)return null;
+    const r=record;
+    const Field=({label,value,span2})=><div className={span2?'col-span-2':''}><label className="block text-[11px] font-semibold text-surface-400 uppercase tracking-wider mb-1.5">{label}</label><div className="text-sm font-medium">{value||<span className="text-surface-300 italic">Sin datos</span>}</div></div>;
+
+    return <div className="space-y-4 slide-in">
+        <div className="flex items-center gap-4">
+            <button onClick={onBack} className="p-2 hover:bg-white rounded-xl transition-colors"><I.arrowLeft className="w-5 h-5"/></button>
+            <div className="flex-1"><h1 className="text-2xl font-extrabold tracking-tight">{r.name}</h1>{r.nombre_sl&&<p className="text-surface-400 text-sm">{r.nombre_sl}</p>}</div>
+        </div>
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-surface-200/50 flex flex-wrap gap-4 items-center">
+            <div className="flex items-center gap-2"><span className="text-xs font-semibold text-surface-400">Pipeline:</span><FunnelTag status={r.funnel_status}/></div>
+            <div className="w-px h-5 bg-surface-200"/>
+            <div className="flex items-center gap-2"><span className="text-xs font-semibold text-surface-400">Responsable:</span><span className="tag bg-brand-50 text-brand-700">{r.responsable||'Sin asignar'}</span></div>
+            {r.rating_google&&<><div className="w-px h-5 bg-surface-200"/><div className="flex items-center gap-2"><span className="text-xs font-semibold text-surface-400">Google:</span><StarRating rating={r.rating_google}/><span className="text-xs text-surface-400">({r.reviews_google} reviews)</span></div></>}
+            <div className="w-px h-5 bg-surface-200"/>
+            <div className="flex items-center gap-2"><span className="text-xs font-semibold text-surface-400">Prob:</span><span className={`text-sm font-bold ${getProbColor(r.probabilidad)}`}>{r.probabilidad!=null?`${Math.round(r.probabilidad*100)}%`:'—'}</span></div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-surface-200/50"><h3 className="text-sm font-bold mb-4 flex items-center gap-2"><I.building className="w-4 h-4 text-brand-600"/>Empresa</h3><div className="grid grid-cols-2 gap-4"><Field label="Nombre" value={r.name} span2/><Field label="Nombre SL" value={r.nombre_sl} span2/><Field label="NIF" value={r.nif}/><Field label="Propietario" value={r.propietario}/><Field label="Inicio Actividad" value={r.begin_activity}/><Field label="Probabilidad" value={r.probabilidad!=null?`${Math.round(r.probabilidad*100)}%`:null}/></div></div>
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-surface-200/50"><h3 className="text-sm font-bold mb-4 flex items-center gap-2"><I.phone className="w-4 h-4 text-emerald-600"/>Contacto</h3><div className="grid grid-cols-2 gap-4"><Field label="Teléfono" value={r.phone} span2/><Field label="Email" value={r.email} span2/><Field label="Web" value={r.web} span2/><Field label="Teléfonos (web)" value={r.phones_web} span2/><Field label="Emails (web)" value={r.emails_web} span2/></div></div>
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-surface-200/50"><h3 className="text-sm font-bold mb-4 flex items-center gap-2"><I.mapPin className="w-4 h-4 text-rose-500"/>Dirección</h3><div className="grid grid-cols-2 gap-4"><Field label="Dirección" value={r.full_address} span2/><Field label="Calle" value={r.street}/><Field label="Número" value={r.house_number}/><Field label="CP" value={r.zip_code}/><Field label="Municipio" value={r.municipio}/></div></div>
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-surface-200/50"><h3 className="text-sm font-bold mb-4 flex items-center gap-2"><I.target className="w-4 h-4 text-violet-600"/>Operativa CRM</h3><div className="grid grid-cols-2 gap-4"><Field label="Estado Funnel" value={r.funnel_status||'Pendiente'}/><Field label="Persona Contacto" value={r.persona_contacto}/><Field label="Responsable" value={r.responsable}/><Field label="Próximo Contacto" value={r.proximo_contacto}/><Field label="Comentarios" value={r.comentarios} span2/></div></div>
+        </div>
+    </div>;
+}
+
+// ===== KANBAN =====
+function KanbanView({records,onView}){
+    const[data,setData]=useState(records);
+    const[dragId,setDragId]=useState(null);
+
+    const columns=[
+        {key:'PENDIENTE',label:'Pendientes',color:'from-slate-400 to-slate-500',border:'border-l-slate-300'},
+        {key:'RELLAMAR',label:'Rellamar',color:'from-amber-400 to-amber-500',border:'border-l-amber-400'},
+        {key:'SI',label:'En Funnel',color:'from-emerald-400 to-emerald-500',border:'border-l-emerald-400'},
+        {key:'NO',label:'No Interesado',color:'from-rose-400 to-rose-500',border:'border-l-rose-400'},
+    ];
+    const getCol=(r)=>{const s=r.funnel_status;if(!s)return'PENDIENTE';if(s.toUpperCase().includes('RELLAMAR'))return'RELLAMAR';if(s.toUpperCase()==='SI')return'SI';if(s.toUpperCase()==='NO')return'NO';return'PENDIENTE';};
+    const handleDrop=(colKey)=>{if(!dragId)return;setData(prev=>prev.map(r=>r.id===dragId?{...r,funnel_status:colKey==='PENDIENTE'?null:colKey}:r));setDragId(null);};
+
+    return <div className="space-y-4 animate-in">
+        <div><h1 className="text-3xl font-extrabold tracking-tight">Pipeline de Ventas</h1><p className="text-surface-400 text-sm mt-1">Arrastra las tarjetas para cambiar el estado</p></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            {columns.map(col=>{const items=data.filter(r=>getCol(r)===col.key);return <div key={col.key} className="bg-surface-50/50 rounded-2xl p-3 border border-surface-200/50 kanban-col" onDragOver={e=>e.preventDefault()} onDrop={()=>handleDrop(col.key)}>
+                <div className="flex items-center gap-2 mb-3 px-1"><div className={`w-2 h-6 rounded-full bg-gradient-to-b ${col.color}`}/><h3 className="text-sm font-bold">{col.label}</h3><span className="ml-auto text-xs font-bold text-surface-400 bg-white px-2 py-0.5 rounded-full">{items.length}</span></div>
+                <div className="space-y-2">
+                    {items.map(r=><div key={r.id} draggable onDragStart={()=>setDragId(r.id)} onClick={()=>onView(r.id)} className={`bg-white rounded-xl p-3 shadow-sm border-l-[3px] ${col.border} cursor-grab active:cursor-grabbing hover:shadow-md transition-all`}>
+                        <div className="flex items-start justify-between mb-1.5"><span className="text-sm font-semibold leading-tight line-clamp-2">{r.name}</span><span className="text-[10px] text-surface-300 ml-2 flex-shrink-0">#{r.id}</span></div>
+                        {r.persona_contacto&&<div className="text-xs text-surface-400 flex items-center gap-1 mb-1"><I.users className="w-3 h-3"/>{r.persona_contacto}</div>}
+                        {(r.phone||r.phones_web)&&<div className="text-xs text-surface-400 flex items-center gap-1 mb-1"><I.phone className="w-3 h-3"/>{r.phone||r.phones_web?.split(',')[0]}</div>}
+                        <div className="flex items-center justify-between mt-2">{r.responsable&&<span className="tag bg-brand-50 text-brand-600 text-[10px]">{r.responsable}</span>}{r.probabilidad!=null&&<span className={`text-xs font-bold ${getProbColor(r.probabilidad)}`}>{Math.round(r.probabilidad*100)}%</span>}</div>
+                        {r.comentarios&&<div className="text-[11px] text-surface-400 mt-2 pt-2 border-t border-surface-100 line-clamp-2">{r.comentarios}</div>}
+                    </div>)}
+                </div>
+            </div>})}
+        </div>
+    </div>;
+}
+
+// ===== ARGUMENTARIO DE VENTAS =====
+function ArgumentarioView(){
+    const sections=[
+        {
+            icon:I.zap,color:'from-amber-500 to-orange-500',
+            title:'1. Apertura — Romper el Hielo',
+            intro:'El primer contacto es decisivo. El administrador de fincas está acostumbrado a recibir llamadas comerciales, así que diferénciate desde el segundo 1.',
+            script:`"Buenos días [NOMBRE], le llamo de [EMPRESA]. Hemos estado analizando el sector de administración de fincas en Alcalá de Henares y hemos visto que su despacho, [NOMBRE EMPRESA], tiene [X] valoraciones en Google con una media de [X]. Eso nos llamó la atención porque indica que sus clientes hablan de ustedes... pero ¿están aprovechando esa visibilidad al máximo?"`,
+            tips:['Personaliza SIEMPRE con datos reales del CRM (reviews, rating, web).','Si tienen baja puntuación (<3.5), enfócalo como oportunidad de mejora.','Si no tienen web, es tu argumento estrella: "Hemos visto que no cuentan con presencia digital..."','Menciona su municipio concreto para generar cercanía local.']
+        },
+        {
+            icon:I.target,color:'from-brand-500 to-brand-700',
+            title:'2. Diagnóstico — Detectar el Dolor',
+            intro:'Antes de vender, escucha. Haz preguntas que revelen necesidades reales.',
+            script:`"Actualmente, cuando un vecino de una comunidad busca 'administrador de fincas en Alcalá de Henares', ¿sabe dónde aparece usted? Le cuento: el 87% de las personas busca estos servicios en Google antes de llamar. Si su competencia aparece primero, se lleva esas comunidades. ¿Cuántas comunidades nuevas ha captado este último año solo por búsquedas en internet?"`,
+            tips:['Escucha activamente: si dicen "llevamos nuestra propia contabilidad" o "no necesitamos nada", puede significar que ya tienen soluciones internas — redirige a lo que NO tienen.','Si tienen web obsoleta, señálalo con tacto: "Vimos su web y tiene potencial, pero en 2026 los vecinos esperan poder hacer gestiones online..."','Usa datos de sus reviews de Google como espejo: "Vemos que sus clientes valoran mucho [aspecto X]..."']
+        },
+        {
+            icon:I.globe,color:'from-violet-500 to-purple-600',
+            title:'3. Propuesta Web — El Escaparate Digital',
+            intro:'Presenta la web no como un gasto, sino como la herramienta que trabaja 24/7 captando comunidades.',
+            script:`"Lo que proponemos es crear para [EMPRESA] una web profesional que haga tres cosas: primera, que cuando un presidente de comunidad busque administrador en Alcalá, les encuentre a ustedes. Segunda, que transmita la profesionalidad que ya tienen. Y tercera, que los vecinos de sus comunidades puedan consultar documentación, actas y cuentas sin tener que llamarles — eso les ahorra horas de teléfono al mes."`,
+            tips:['Si ya tienen web, enfócalo como rediseño/modernización.','Menciona funcionalidades específicas del sector: portal de vecinos, acceso a actas, estados de cuentas, incidencias online.','Compara con la competencia directa de la zona: "Hemos visto que [competidor] ya tiene portal de vecinos..."','Para los que llevan correduría propia (como Maquilón), ofrece integración de seguros en la web.']
+        },
+        {
+            icon:I.trendUp,color:'from-emerald-500 to-teal-600',
+            title:'4. Propuesta SEO — Ser el Primero en Google',
+            intro:'El SEO es lo que convierte la web de un gasto a una inversión con retorno medible.',
+            script:`"La web por sí sola es como tener una oficina en una calle sin tráfico. El SEO es lo que pone su oficina en la Gran Vía digital. Nosotros nos encargamos de que cuando alguien busque 'administrador de fincas Alcalá de Henares', o 'mejor administrador de fincas Madrid', su despacho aparezca en las primeras posiciones. Y aquí viene lo importante: cada comunidad nueva que capten por esta vía puede representar entre 3.000€ y 8.000€ al año de facturación recurrente."`,
+            tips:['Usa las keywords que ya encontramos en web de cada prospecto.','Si el prospecto tiene muchas reviews positivas, propón estrategia de reputación online.','Menciona la competencia: "Hay X administradores de fincas en Alcalá, pero solo 3 posiciones visibles en Google..."','Para los escépticos: ofrece un informe gratuito de visibilidad actual como gancho.']
+        },
+        {
+            icon:I.shield,color:'from-rose-500 to-pink-600',
+            title:'5. Manejo de Objeciones',
+            intro:'Las objeciones más frecuentes del sector y cómo resolverlas con datos reales.',
+            objections:[
+                {obj:'"Ya tenemos web"',resp:'Perfecto, eso significa que ya entienden la importancia. ¿Pero esa web genera llamadas? ¿Pueden ver las analíticas? La web no es un folleto digital, es una máquina de captar comunidades. Le propongo una auditoría gratuita de su web actual para ver qué potencial de mejora tiene.'},
+                {obj:'"No necesitamos más comunidades"',resp:'Lo entiendo, pero piense en esto: tener presencia digital no es solo captar, es retener. Cuando el presidente de una comunidad busca en Google y encuentra a su competencia con mejor imagen, más reviews, portal de vecinos... empieza a dudar. La presencia digital es también un escudo contra la competencia.'},
+                {obj:'"Llevamos nuestra propia contabilidad / Ya tenemos todo resuelto"',resp:'Genial, eso habla bien de su organización. Nuestra propuesta no sustituye nada, complementa. Es la capa de visibilidad que hace que los que aún no son sus clientes, los encuentren antes que a otros.'},
+                {obj:'"Envíemelo por email y ya lo miraré"',resp:'Por supuesto, se lo envío ahora mismo. Pero le adelanto algo: el email contiene una propuesta personalizada con datos de su negocio, no es un genérico. ¿Le parece si le llamo el [día concreto] para comentar sus impresiones? Así no se queda solo en la bandeja de entrada.'},
+                {obj:'"No tenemos presupuesto"',resp:'Entiendo perfectamente. Por eso nuestros planes son escalables. Podemos empezar con una web profesional básica y SEO local, con una inversión que se recupera con una sola comunidad nueva. ¿Cuánto facturan por comunidad al año? Generalmente con captar una o dos comunidades nuevas, la inversión se ha pagado sola.'},
+                {obj:'"No me interesa" (tajante)',resp:'Lo respeto totalmente. Solo le dejo un dato: el 72% de los administradores que contactamos vuelven a escribirnos en 3-6 meses porque ven que su competencia sí se posiciona. ¿Le parece si le dejo mi contacto por si en algún momento quieren explorar opciones? Sin compromiso alguno.'},
+            ]
+        },
+        {
+            icon:I.msgCircle,color:'from-cyan-500 to-blue-600',
+            title:'6. Cierre — Siguiente Paso Concreto',
+            intro:'Nunca termines una llamada sin un compromiso concreto de siguiente acción.',
+            script:`"Perfecto [NOMBRE], entonces lo que le propongo es lo siguiente: le preparo un informe personalizado con el análisis de visibilidad de [EMPRESA] — dónde aparecen en Google, qué hace su competencia directa en Alcalá, y una propuesta concreta con tres opciones de presupuesto. ¿Le viene bien que se lo presente el [martes/jueves] a las [hora]? Serían 20 minutos y sin ningún compromiso."`,
+            tips:['Propón SIEMPRE una fecha y hora concretas.','Registra TODO en el CRM inmediatamente: comentarios, persona de contacto, próximo paso.','Si el estado es RELLAMAR, anota en comentarios el motivo exacto y cuándo rellamar.','Si pasan a funnel (SI), programa la presentación dentro de las 48h siguientes — no dejes que se enfríe.']
+        }
+    ];
+
+    return <div className="space-y-6 animate-in">
+        <div className="flex items-end justify-between">
+            <div>
+                <h1 className="text-3xl font-extrabold tracking-tight">Argumentario de Ventas</h1>
+                <p className="text-surface-400 text-sm mt-1">Guía completa para la venta de servicios Web + SEO a administradores de fincas</p>
+            </div>
+            <div className="tag bg-violet-50 text-violet-700 text-xs">Servicios IT: Web & SEO</div>
+        </div>
+
+        {/* Quick Reference Card */}
+        <div className="bg-gradient-to-r from-brand-600 via-violet-600 to-purple-600 rounded-2xl p-6 text-white shadow-xl">
+            <h3 className="text-sm font-bold opacity-80 uppercase tracking-wider mb-3">Datos Clave del Sector</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div><div className="text-2xl font-extrabold">87%</div><div className="text-xs opacity-70">buscan en Google antes de contratar</div></div>
+                <div><div className="text-2xl font-extrabold">3-8K</div><div className="text-xs opacity-70">facturación anual por comunidad</div></div>
+                <div><div className="text-2xl font-extrabold">72%</div><div className="text-xs opacity-70">vuelven a contactarnos en 6 meses</div></div>
+                <div><div className="text-2xl font-extrabold">3 pos.</div><div className="text-xs opacity-70">visibles en Google Maps local</div></div>
+            </div>
+        </div>
+
+        {/* Sections */}
+        {sections.map((sec,idx)=>(
+            <div key={idx} className="arg-card bg-white rounded-2xl shadow-sm border border-surface-200/50 overflow-hidden">
+                <div className="p-6">
+                    <div className="flex items-start gap-4 mb-4">
+                        <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${sec.color} flex items-center justify-center shadow-lg flex-shrink-0`}>
+                            <sec.icon className="w-5 h-5 text-white"/>
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-extrabold tracking-tight">{sec.title}</h2>
+                            <p className="text-sm text-surface-400 mt-1">{sec.intro}</p>
+                        </div>
+                    </div>
+
+                    {sec.script && (
+                        <div className="bg-surface-50 border-l-[3px] border-brand-500 rounded-r-xl p-4 mb-4">
+                            <div className="text-[10px] font-bold text-brand-600 uppercase tracking-widest mb-2">Script sugerido</div>
+                            <p className="text-sm text-slate-700 italic leading-relaxed">{sec.script}</p>
+                        </div>
+                    )}
+
+                    {sec.tips && (
+                        <div className="space-y-2 mt-4">
+                            <div className="text-[10px] font-bold text-surface-400 uppercase tracking-widest">Tips de ejecución</div>
+                            {sec.tips.map((t,i)=>(
+                                <div key={i} className="flex items-start gap-2.5 text-sm">
+                                    <I.check className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5"/>
+                                    <span>{t}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {sec.objections && (
+                        <div className="space-y-3 mt-2">
+                            {sec.objections.map((o,i)=>(
+                                <div key={i} className="border border-surface-200 rounded-xl overflow-hidden">
+                                    <div className="bg-rose-50 px-4 py-2.5 flex items-center gap-2">
+                                        <I.alert className="w-4 h-4 text-rose-500"/>
+                                        <span className="text-sm font-bold text-rose-700">{o.obj}</span>
+                                    </div>
+                                    <div className="px-4 py-3 bg-emerald-50/50">
+                                        <div className="flex items-start gap-2">
+                                            <I.check className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5"/>
+                                            <span className="text-sm text-slate-700">{o.resp}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        ))}
+
+        {/* Quick Matrix */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-surface-200/50">
+            <h3 className="text-sm font-bold mb-4 flex items-center gap-2"><span className="w-1.5 h-5 rounded-full bg-gradient-to-b from-brand-500 to-brand-700"/>Matriz Rápida de Aproximación según estado CRM</h3>
+            <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                    <thead><tr className="border-b border-surface-200">
+                        <th className="text-left py-2 px-3 text-xs font-bold text-surface-400 uppercase">Estado</th>
+                        <th className="text-left py-2 px-3 text-xs font-bold text-surface-400 uppercase">Enfoque de llamada</th>
+                        <th className="text-left py-2 px-3 text-xs font-bold text-surface-400 uppercase">Objetivo</th>
+                    </tr></thead>
+                    <tbody className="divide-y divide-surface-100">
+                        <tr><td className="py-2.5 px-3"><FunnelTag status={null}/></td><td className="py-2.5 px-3">Primera toma de contacto. Presentación + diagnóstico rápido.</td><td className="py-2.5 px-3 font-medium text-brand-700">Conseguir 2 min de atención</td></tr>
+                        <tr><td className="py-2.5 px-3"><FunnelTag status="RELLAMAR"/></td><td className="py-2.5 px-3">Retomar conversación. Aportar valor nuevo (dato, caso de éxito).</td><td className="py-2.5 px-3 font-medium text-amber-700">Agendar presentación</td></tr>
+                        <tr><td className="py-2.5 px-3"><FunnelTag status="SI"/></td><td className="py-2.5 px-3">Presentación formal. Propuesta personalizada con 3 opciones de precio.</td><td className="py-2.5 px-3 font-medium text-emerald-700">Cerrar venta</td></tr>
+                        <tr><td className="py-2.5 px-3"><FunnelTag status="NO"/></td><td className="py-2.5 px-3">Nurturing: enviar contenido de valor cada 2 meses. No insistir.</td><td className="py-2.5 px-3 font-medium text-rose-600">Mantener puerta abierta</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>;
+}
+
+// ===== MAIN APP =====
+function App(){
+    const[loggedIn,setLoggedIn]=useState(false);
+    const[userName,setUserName]=useState('');
+    const[view,setView]=useState('dashboard');
+    const[selectedId,setSelectedId]=useState(null);
+    const[toast,setToast]=useState(null);
+    const[records]=useState(EMBEDDED_DATA);
+    const stats=useMemo(()=>computeStats(records),[records]);
+
+    const showToast=(m,t='success')=>setToast({message:m,type:t});
+    const handleLogin=(name)=>{setLoggedIn(true);setUserName(name);showToast(`Bienvenido, ${name}`);};
+
+    const navItems=[
+        {key:'dashboard',icon:I.dashboard,label:'Dashboard'},
+        {key:'records',icon:I.list,label:'Registros'},
+        {key:'kanban',icon:I.kanban,label:'Pipeline'},
+        {key:'argumentario',icon:I.book,label:'Argumentario'},
+    ];
+
+    if(!loggedIn)return<><LoginScreen onLogin={handleLogin}/>{toast&&<Toast {...toast} onClose={()=>setToast(null)}/>}</>;
+
+    const renderContent=()=>{
+        if(view==='detail'&&selectedId){
+            const rec=records.find(r=>r.id===selectedId);
+            return<RecordDetailView record={rec} onBack={()=>{setView('records');setSelectedId(null);}}/>;
+        }
+        switch(view){
+            case'dashboard':return<DashboardView stats={stats} onNavigate={v=>setView(v)}/>;
+            case'records':return<RecordsView records={records} onView={id=>{setSelectedId(id);setView('detail');}}/>;
+            case'kanban':return<KanbanView records={records} onView={id=>{setSelectedId(id);setView('detail');}}/>;
+            case'argumentario':return<ArgumentarioView/>;
+            default:return null;
+        }
+    };
+
+    return <div className="min-h-screen flex">
+        <aside className="w-[220px] bg-white border-r border-surface-200/80 flex flex-col fixed h-full z-20">
+            <div className="px-5 py-5 border-b border-surface-200/50"><div className="flex items-center gap-3"><div className="w-9 h-9 rounded-xl shimmer-bg flex items-center justify-center shadow-lg shadow-brand-600/30"><I.building className="w-5 h-5 text-white"/></div><div><div className="text-sm font-extrabold tracking-tight">FincaHub</div><div className="text-[10px] text-surface-400 font-medium">CRM Platform</div></div></div></div>
+            <nav className="flex-1 px-3 py-4 space-y-1">
+                <div className="text-[10px] font-bold text-surface-300 uppercase tracking-widest px-3 mb-2">General</div>
+                {navItems.map(item=>{const active=view===item.key||(view==='detail'&&item.key==='records');return <button key={item.key} onClick={()=>{setView(item.key);setSelectedId(null);}} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${active?'bg-brand-50 text-brand-700 shadow-sm':'text-surface-400 hover:bg-surface-50'}`}><item.icon className={`w-[18px] h-[18px] ${active?'text-brand-600':''}`}/>{item.label}</button>})}
+            </nav>
+            <div className="px-4 py-4 border-t border-surface-200/50">
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-violet-500 flex items-center justify-center text-white text-xs font-bold">{userName[0]}</div>
+                    <div className="min-w-0 flex-1"><div className="text-xs font-semibold truncate">{userName}</div><div className="text-[10px] text-surface-400">Comercial</div></div>
+                    <button onClick={()=>{setLoggedIn(false);setUserName('');setView('dashboard');}} className="p-1.5 hover:bg-rose-50 rounded-lg text-surface-400 hover:text-rose-500 transition-colors" title="Cerrar sesión"><I.logout className="w-4 h-4"/></button>
+                </div>
+            </div>
+        </aside>
+
+        <main className="flex-1 ml-[220px]">
+            <header className="glass sticky top-0 z-10 border-b border-surface-200/50 px-6 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs text-surface-400"><span className="w-2 h-2 rounded-full bg-emerald-400 pulse-dot"/><span>Modo Demo — Datos embebidos (20 registros)</span></div>
+                <div className="text-xs text-surface-400">{new Date().toLocaleDateString('es-ES',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div>
+            </header>
+            <div className="p-6 max-w-[1400px] mx-auto">{renderContent()}</div>
+        </main>
+
+        {toast&&<Toast {...toast} onClose={()=>setToast(null)}/>}
+    </div>;
+}
+
+const root=ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App/>);
+</script>
+</body>
+</html>
